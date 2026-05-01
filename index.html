@@ -208,9 +208,10 @@
 
 	.work-row:has(.work-name:not(.hidden)) .id-field,
 	.name-field:has(.work-name.hidden),
+	.work-row:has(.work-name.hidden) .original-url,
 	.work-field:has(> .hidden),
-	.work-row:has(.costume-field:not(.hidden)) .work-field,
-	.work-row:has(.costume-field:not(.hidden)) .orig-field {
+	.work-row:has(.costume-field:not(.hidden)) .orig-field,
+	.work-row:has(.costume-field:not(.hidden)) .work-field {
 	  display: none;
 	}
 
@@ -424,7 +425,7 @@
 
         <div class="field work-field">
           <label>Работа</label>
-          <input class="work-url" type="url" placeholder="https://..." aria-label="Работа" />
+          <input class="work-url" type="url" placeholder="Работа: https://..." aria-label="Работа" />
         </div>
 
         <div class="field orig-field">
@@ -505,11 +506,13 @@
       },
 	  'Предмет': {
 		  'template': 'cw3/things/$1.png',
-		  'columns': 5
+		  'columns': 5,
+		  'noOffsite': true
       },
 	  'Костюм': {
 		  'template': 'cw3/cats/$2/costume/$1.png',
-		  'columns': 3
+		  'columns': 3,
+		  'noOffsite': true
 	  },
 	  'Иллюстрация': {
 		  'template': 'blog$1',
@@ -563,6 +566,7 @@
       const node = workTemplate.content.firstElementChild.cloneNode(true);
       const typeSelect = node.querySelector('.work-type');
       const nameSelect = node.querySelector('.work-name');
+      const workSelect = node.querySelector('.work-url');
       const costumeSelect = node.querySelector('.costume-field');
       const originalInput = node.querySelector('.original-url');
       const removeBtn = node.querySelector('.remove-work');
@@ -572,10 +576,10 @@
 	  };
 
 	  const onChange = () => {
+	    workSelect.classList.toggle('hidden', typeSelect.value === 'Предмет');
 	    costumeSelect.classList.toggle('hidden', typeSelect.value !== 'Костюм');
-	    nameSelect.classList.toggle('hidden', !['Фон', 'Бот'].includes(undesignify(typeSelect.value)));
+	    nameSelect.classList.toggle('hidden', typeSelect.value === undesignify(typeSelect.value));
         setOptions(nameSelect, Object.keys(arts[undesignify(typeSelect.value)]).filter(x => /\W/.test(x)), nameSelect.value);
-		originalInput.classList.toggle('hidden', typeSelect.value === undesignify(typeSelect.value));
         autofill();
       };
 
@@ -639,16 +643,18 @@
 		const simpleType = undesignify(type);
 		const list = [];
 		for (const work of data.works) {
-		  if (work.type !== type || (!work.name && !work.id) || !work.urls.some(x => x) || (!work.originalUrl && type !== simpleType)) continue;
+		  if (work.type !== type || (!work.name && !work.id) || (!work.urls.some(x => x) && simpleType !== 'Предмет') || (!work.originalUrl && type !== simpleType)) continue;
+		  const siteURL = arts[simpleType].template.replace('$1', arts[simpleType][work.name] || work.id);
+		  if (!work.urls.some(x => x)) work.urls = [siteURL];
 		  list.push(work.urls.map(url => 
 		    `[img]${url}[/img]
-${!url.startsWith('http') ? '' : `[url]${arts[simpleType].template.replace('$1', work.id || arts[simpleType][work.name])}[/url]\n`}[url]${url}[/url]${simpleType !== type ? `\n[url]${work.originalUrl}[/url]` : ''}`
+${arts[simpleType].noOffsite ? '' : `[url]${siteURL}[/url]\n`}[url]${url}[/url]${simpleType !== type ? `\n[url]${work.originalUrl}[/url]` : ''}`
           ));
 		}
 		if (list.length > 0) works.push(`[b]${plural(type)}:[/b]\n\n${formatTable(list, arts[simpleType].columns)}`);
 	  }
 
-	  const workCounts = formatMultiple(Object.entries(Object.groupBy(data.works.filter(work => (work.name || work.id) && work.urls.some(x => x) && (work.originalUrl || undesignify(work.type) === work.type)), work => work.type === 'Костюм' ? `${work.type} на ${work.urls.length} стадии` : work.type)).filter(x => x[1].length > 0).map(x => x[0] + ' x' + x[1].length)) || 'ничего';
+	  const workCounts = formatMultiple(Object.entries(Object.groupBy(data.works.filter(work => (work.name || work.id) && (work.urls.some(x => x) || work.type === 'Предмет') && (work.originalUrl || undesignify(work.type) === work.type)), work => work.type === 'Костюм' ? `${work.type} на ${work.urls.length} стадии` : work.type)).filter(x => x[1].length > 0).map(x => x[0] + ' x' + x[1].length)) || 'ничего';
 
       let idString = `[link${data.id}] (${data.id}) нарисовал в шайку Разбитого Корабля ${workCounts}. Прошу выдать баллы за работу:`;
       reportIdInput.classList.remove('invalid');

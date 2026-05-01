@@ -469,7 +469,7 @@
   <script>
     const arts = {
 	  'Фон': {
-		  'template': 'spacoj/$1.jpg',
+		  'template': 'cw3/spacoj/$1.jpg',
 		  'columns': 1,
 		  "Трюм": 104675,
 		  "Верхняя палуба": 104670,
@@ -491,7 +491,7 @@
 		  "Скалистая местность": 104664,
       },
 	  'Бот': {
-		  'template': 'cats/0/costume/$1.png',
+		  'template': 'cw3/cats/0/costume/$1.png',
 		  'columns': 4,
 		  "Морской Разбойник": 3077,
 		  "Галантный Стид": 2234,
@@ -504,16 +504,24 @@
 		  "Бoродач-Костелом": 89400
       },
 	  'Предмет': {
-		  'template': 'things/$1.png',
+		  'template': 'cw3/things/$1.png',
 		  'columns': 5
       },
 	  'Костюм': {
-		  'template': 'cats/$2/costume/$1.png',
+		  'template': 'cw3/cats/$2/costume/$1.png',
 		  'columns': 3
-	  }
+	  },
+	  'Иллюстрация': {
+		  'template': 'blog$1',
+		  'columns': 1
+      },
+	  'Шапка': {
+		  'template': 'blog$1',
+		  'columns': 1
+      }
 	};
 
-	const allArts = ['Фон', 'Украшение фона', 'Бот', 'Украшение бота', 'Предмет', 'Костюм'];
+	const allArts = ['Предмет', 'Костюм', 'Бот', 'Украшение бота', 'Шапка', 'Иллюстрация', 'Фон', 'Украшение фона'];
 
 	const originals = {
 	  "Трюм": "https://ibb.co/wN0fhwVr",
@@ -541,7 +549,14 @@
 	}
 
 	function plural(type) {
-	  return type.startsWith('Украшение') ? type.replace('Украшение', 'Украшения').slice(0, -1) + 'ов' : type + 'ы';
+	  switch (type) {
+	    case 'Шапка':
+		  return 'Шапки';
+		case 'Иллюстрация':
+		  return 'Иллюстрации';
+	    default:
+		  return type.startsWith('Украшение') ? type.replace('Украшение', 'Украшения').slice(0, -1) + 'ов' : type + 'ы';
+	  }
 	}
 
     function addWorkRow() {
@@ -558,7 +573,7 @@
 
 	  const onChange = () => {
 	    costumeSelect.classList.toggle('hidden', typeSelect.value !== 'Костюм');
-	    nameSelect.classList.toggle('hidden', ['Предмет', 'Костюм'].includes(typeSelect.value));
+	    nameSelect.classList.toggle('hidden', !['Фон', 'Бот'].includes(undesignify(typeSelect.value)));
         setOptions(nameSelect, Object.keys(arts[undesignify(typeSelect.value)]).filter(x => /\W/.test(x)), nameSelect.value);
 		originalInput.classList.toggle('hidden', typeSelect.value === undesignify(typeSelect.value));
         autofill();
@@ -594,7 +609,7 @@
         name: getValue(item.querySelector('.work-name')),
         id: getValue(item.querySelector('.work-id')),
         urls: item.querySelector('.costume-field').offsetParent
-			? [...item.querySelectorAll('.costume-field :checked')].map(x => 'cw3/' + arts.Костюм.template.replace('$1', getValue(item.querySelector('.work-id'))).replace('$2', x.className.slice('costume_'.length)))
+			? [...item.querySelectorAll('.costume-field :checked')].map(x => arts.Костюм.template.replace('$1', getValue(item.querySelector('.work-id'))).replace('$2', x.className.slice('costume_'.length)))
 			: [getValue(item.querySelector('.work-url'))],
         originalUrl: getValue(item.querySelector('.original-url')),
       }));
@@ -606,38 +621,40 @@
 	  return strings.length <= 1 ? strings[0] : strings.slice(0, -1).join(', ') + ' и ' + strings.at(-1);
 	}
 
-	function formatTable(list, cols) {
+	function formatTableInternal(list, cols) {
 	  const rows = Math.ceil(list.length / cols);
 	  cols = Math.ceil(list.length / rows);
 	  return '[table]' + list.map(x => '[td]' + x + '[/td]').reduce((acc, val, i) => (i <= cols * (rows - rows * cols + list.length) ? i % cols === 0 : (list.length - i) % (cols - 1) === 0) ? [...acc, [val]] : [...acc.slice(0, -1), [...acc.at(-1), val]], []).map(x => '[tr]' + x.join('') + '[/tr]').join('\n') + '[/table]';
 	}
 
+	function formatTable(listOfLists, cols) {
+		return listOfLists.some(x => x.length > 1) ? listOfLists.map(x => formatTableInternal(x, cols)).join('\n') : formatTableInternal(listOfLists.flat(), cols);
+	}
+
     function refreshResult() {
 	  const data = getFormData();
 
-	  const workCounts = Object.fromEntries(allArts.map(type => [type, data.works.filter(work => work.type === type && (work.name || work.id) && work.urls.some(x => x) && (work.originalUrl || undesignify(type) === type)).length]));
-	  const stringWorkCounts = formatMultiple(Object.entries(workCounts).filter(x => x[1] !== 0).map(x => x[0] + ' x' + x[1])) || 'ничего';
-
 	  const works = [];
 	  for (const type of allArts) {
-	    if (workCounts[type] === 0) continue;
 		const simpleType = undesignify(type);
 		const list = [];
 		for (const work of data.works) {
 		  if (work.type !== type || (!work.name && !work.id) || !work.urls.some(x => x) || (!work.originalUrl && type !== simpleType)) continue;
-		  for (const url of work.urls) {
-		    list.push(`[img]${url}[/img]
-${url.startsWith('cw3') ? '' : `[url]cw3/${arts[simpleType].template.replace('$1', work.id || arts[simpleType][work.name])}[/url]\n`}[url]${url}[/url]${simpleType !== type ? `\n[url]${work.originalUrl}[/url]` : ''}`);
-		  }
+		  list.push(work.urls.map(url => 
+		    `[img]${url}[/img]
+${!url.startsWith('http') ? '' : `[url]${arts[simpleType].template.replace('$1', work.id || arts[simpleType][work.name])}[/url]\n`}[url]${url}[/url]${simpleType !== type ? `\n[url]${work.originalUrl}[/url]` : ''}`
+          ));
 		}
-		works.push(`[b]${plural(type)}:[/b]\n\n${formatTable(list, arts[simpleType].columns)}`);
+		if (list.length > 0) works.push(`[b]${plural(type)}:[/b]\n\n${formatTable(list, arts[simpleType].columns)}`);
 	  }
 
-      let idString = `[link${data.id}] (${data.id}) нарисовал в шайку Разбитого Корабля ${stringWorkCounts}. Прошу выдать баллы за работу:`;
+	  const workCounts = formatMultiple(Object.entries(Object.groupBy(data.works.filter(work => (work.name || work.id) && work.urls.some(x => x) && (work.originalUrl || undesignify(work.type) === work.type)), work => work.type === 'Костюм' ? `${work.type} на ${work.urls.length} стадии` : work.type)).filter(x => x[1].length > 0).map(x => x[0] + ' x' + x[1].length)) || 'ничего';
+
+      let idString = `[link${data.id}] (${data.id}) нарисовал в шайку Разбитого Корабля ${workCounts}. Прошу выдать баллы за работу:`;
       reportIdInput.classList.remove('invalid');
-      if (!Number.isInteger(data.id) || data.id < 0 || data.id >= 1E7) {
+      if (!Number.isInteger(data.id) || data.id < 1 || data.id >= 1E7) {
         reportIdInput.classList.add('invalid');
-        idString = 'ID должен быть положительным числом до 7 цифр включительно.\n';
+        idString = 'ID должен быть положительным числом до 7 цифр включительно.';
       }
 
       result.value = `${idString}\n\n[center]${works.join('\n\n')}[/center]`;

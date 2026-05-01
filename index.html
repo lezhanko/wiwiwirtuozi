@@ -91,7 +91,68 @@
     input:focus, select:focus, textarea:focus {
       border-color: rgba(91, 61, 51, 0.55);
       box-shadow: 0 0 0 4px rgba(91, 61, 51, 0.10);
-    }
+	}
+
+	.checkbox {
+	  display: inline-flex;
+	  align-items: center;
+	  gap: 10px;
+	  cursor: pointer;
+	  user-select: none;
+	  color: var(--text);
+	  font-size: 12px;
+	  text-transform: none;
+	  line-height: 1.2;
+	}
+
+	.checkbox input[type="checkbox"] {
+	  position: absolute;
+	  opacity: 0;
+	  width: 1px;
+	  height: 1px;
+	  pointer-events: none;
+	}
+
+	.checkbox-box {
+	  width: 20px;
+	  height: 20px;
+	  border-radius: 6px;
+	  border: 1px solid var(--line);
+	  background: rgba(255, 255, 255, 0.72);
+	  display: grid;
+	  place-items: center;
+	  transition: all .15s ease;
+	  flex: 0 0 20px;
+	}
+
+	.checkbox-box::after {
+	  content: "";
+	  width: 6px;
+	  height: 10px;
+	  border-right: 2px solid transparent;
+	  border-bottom: 2px solid transparent;
+	  transform: rotate(45deg) translate(-1px, -1px);
+	  transition: border-color .15s ease;
+	}
+
+	.checkbox:hover .checkbox-box {
+	  border-color: rgba(91, 61, 51, 0.45);
+	  box-shadow: 0 0 0 4px rgba(91, 61, 51, 0.06);
+	}
+
+	.checkbox input[type="checkbox"]:checked + .checkbox-box {
+	  background: linear-gradient(180deg, var(--accent), #4a3028);
+	  border-color: var(--accent);
+	}
+
+	.checkbox input[type="checkbox"]:checked + .checkbox-box::after {
+	  border-right-color: #fff;
+	  border-bottom-color: #fff;
+	}
+
+	.checkbox input[type="checkbox"]:focus-visible + .checkbox-box {
+	  box-shadow: 0 0 0 4px rgba(91, 61, 51, 0.14);
+	}
 
     .work-list {
       display: grid;
@@ -125,7 +186,7 @@
       flex: 0 0 180px;
     }
 
-    .name-field {
+    .name-field, .id-field {
       flex: 0 0 220px;
     }
 
@@ -141,8 +202,21 @@
       flex: 0 0 44px;
     }
 
+	.hidden {
+	  display: none;
+	}
+
+	.work-row:has(.work-name:not(.hidden)) .id-field,
+	.name-field:has(.work-name.hidden),
+	.work-field:has(> .hidden),
+	.work-row:has(.costume-field:not(.hidden)) .work-field,
+	.work-row:has(.costume-field:not(.hidden)) .orig-field {
+	  display: none;
+	}
+
     .type-field label,
 	.name-field label,
+	.id-field label,
     .work-field label,
     .orig-field label {
       position: absolute;
@@ -158,12 +232,18 @@
 
     .type-field select,
     .name-field select,
+	.id-field input,
     .work-field input,
     .orig-field input {
       min-width: 0;
       width: 100%;
       padding: 10px 10px;
     }
+
+	.costume-field {
+	  flex-grow: 1;
+      justify-content: space-around;
+	}
 
     .icon-btn {
       width: 44px;
@@ -271,8 +351,10 @@
       .work-row { flex-wrap: wrap; }
       .type-field,
       .name-field,
+	  .id-field,
       .work-field,
       .orig-field,
+	  .costume-field,
       .remove-field {
         flex: 1 1 100%;
       }
@@ -296,7 +378,7 @@
         <div class="form-grid">
           <div class="field half">
             <label for="reportId">ID</label>
-            <input id="reportId" name="reportId" type="text" step="1" placeholder="Например, 1670521" required />
+            <input id="reportId" name="reportId" type="text" input="numeric" />
           </div>
 
           <div class="field half"></div>
@@ -335,6 +417,11 @@
           <select class="work-name" aria-label="Название или имя"></select>
         </div>
 
+        <div class="field id-field">
+          <label>ID</label>
+          <input class="work-id" type="text" input="numeric" placeholder="ID" aria-label="ID"></select>
+        </div>
+
         <div class="field work-field">
           <label>Работа</label>
           <input class="work-url" type="url" placeholder="https://..." aria-label="Работа" />
@@ -342,8 +429,34 @@
 
         <div class="field orig-field">
           <label>Оригинал</label>
-          <input class="original-url" type="url" placeholder="https://..." aria-label="Оригинал" />
+          <input class="original-url" type="url" placeholder="Оригинал: https://..." aria-label="Оригинал" />
         </div>
+
+		<div class="field costume-field">
+			<label class="field checkbox">
+			  <input type="checkbox" class="costume_0" />
+			  <span class="checkbox-box"></span>
+			  <span>Обычная</span>
+			</label>
+
+			<label class="field checkbox">
+			  <input type="checkbox" class="costume_1" />
+			  <span class="checkbox-box"></span>
+			  <span>Сон</span>
+			</label>
+
+			<label class="field checkbox">
+			  <input type="checkbox" class="costume_-1" />
+			  <span class="checkbox-box"></span>
+			  <span>Котячья</span>
+			</label>
+
+			<label class="field checkbox">
+			  <input type="checkbox" class="costume_5" />
+			  <span class="checkbox-box"></span>
+			  <span>Питьё</span>
+			</label>
+		</div>
 
         <div class="field remove-field">
           <label></label>
@@ -355,9 +468,9 @@
 
   <script>
     const arts = {
-	  'Украшение фона': {
-	      'plural': 'Украшения фонов',
+	  'Фон': {
 		  'template': 'spacoj/$1.jpg',
+		  'columns': 1,
 		  "Трюм": 104675,
 		  "Верхняя палуба": 104670,
 		  "Капитанский мостик": 104672,
@@ -377,19 +490,34 @@
 		  "Песчаный овраг": 100751,
 		  "Скалистая местность": 104664,
       },
-	  'Украшение бота': {
-	    'plural': 'Украшения ботов',
-	    'template': 'cats/0/costume/$1.png',
-		"Морской Разбойник": 3077,
-		"Галантный Стид": 2234,
-		"Забияка-Билли": 1987,
-		"Пелагус": 104676,
-		"Янтарная": 104677,
-		"Крыса-Лариса": 3095,
-		"Рaстрёпанный Мышонок": 126789,
-		"Устрица": 104665,
-		"Бoродач-Костелом": 89400
-      }
+	  'Бот': {
+		  'template': 'cats/0/costume/$1.png',
+		  'columns': 4,
+		  "Морской Разбойник": 3077,
+		  "Галантный Стид": 2234,
+		  "Забияка-Билли": 1987,
+		  "Пелагус": 104676,
+		  "Янтарная": 104677,
+		  "Крыса-Лариса": 3095,
+		  "Рaстрёпанный Мышонок": 126789,
+		  "Устрица": 104665,
+		  "Бoродач-Костелом": 89400
+      },
+	  'Предмет': {
+		  'template': 'things/$1.png',
+		  'columns': 5
+      },
+	  'Костюм': {
+		  'template': 'cats/$2/costume/$1.png',
+		  'columns': 3
+	  }
+	};
+
+	const allArts = ['Фон', 'Украшение фона', 'Бот', 'Украшение бота', 'Предмет', 'Костюм'];
+
+	const originals = {
+	  "Трюм": "https://ibb.co/wN0fhwVr",
+	  "Морской Разбойник": "тут тоже ссылка",
 	};
 
     const form = document.getElementById('reportForm');
@@ -400,33 +528,51 @@
     const copyBtn = document.getElementById('copyBtn');
     const reportIdInput = document.getElementById('reportId');
 
+	function toTitle(text) {
+	  return text[0].toUpperCase() + text.slice(1).toLowerCase();
+	}
+
+	function designify(type) {
+	  return `Украшение ${type.toLowerCase()}а`;
+	}
+
+	function undesignify(type) {
+	  return type.startsWith('Украшение') ? toTitle(type.slice('Украшение '.length, -'а'.length)) : type;
+	}
+
+	function plural(type) {
+	  return type.startsWith('Украшение') ? type.replace('Украшение', 'Украшения').slice(0, -1) + 'ов' : type + 'ы';
+	}
+
     function addWorkRow() {
       const node = workTemplate.content.firstElementChild.cloneNode(true);
       const typeSelect = node.querySelector('.work-type');
       const nameSelect = node.querySelector('.work-name');
+      const costumeSelect = node.querySelector('.costume-field');
       const originalInput = node.querySelector('.original-url');
       const removeBtn = node.querySelector('.remove-work');
 
 	  const autofill = () => {
-        originalInput.value = `ибб-ссыль на ${typeSelect.value.toLowerCase()} айди ${arts[typeSelect.value][nameSelect.value]}`;
+        originalInput.value = originals[nameSelect.value] || '';
 	  };
 
 	  const onChange = () => {
-        setOptions(nameSelect, Object.keys(arts[typeSelect.value]).filter(x => x !== 'template' && x !== 'plural'), nameSelect.value);
+	    costumeSelect.classList.toggle('hidden', typeSelect.value !== 'Костюм');
+	    nameSelect.classList.toggle('hidden', ['Предмет', 'Костюм'].includes(typeSelect.value));
+        setOptions(nameSelect, Object.keys(arts[undesignify(typeSelect.value)]).filter(x => /\W/.test(x)), nameSelect.value);
+		originalInput.classList.toggle('hidden', typeSelect.value === undesignify(typeSelect.value));
         autofill();
       };
 
-	  setOptions(typeSelect, Object.keys(arts), workList.lastChild?.querySelector?.('.work-type')?.value);
+	  setOptions(typeSelect, allArts, workList.lastChild?.querySelector?.('.work-type')?.value);
 	  onChange();
 
 	  typeSelect.addEventListener('change', onChange);
       nameSelect.addEventListener('change', autofill);
       nameSelect.addEventListener('input', autofill);
       removeBtn.addEventListener('click', () => {
-		if (workList.children.length > 1) {
-		  node.remove();
-		  refreshResult();
-		}
+		node.remove();
+		refreshResult();
 	  });
 
       workList.appendChild(node);
@@ -437,40 +583,54 @@
       select.value = options.includes(preferredValue) ? preferredValue : options[0];
     }
 
+	function getValue(elem) {
+	  return elem.offsetParent ? elem.value.trim() : null;
+	}
+
     function getFormData() {
-      const idValue = Number(reportIdInput.value);
+      const id = Number(reportIdInput.value);
       const works = [...workList.querySelectorAll('.work-item')].map(item => ({
-        type: item.querySelector('.work-type').value,
-        name: item.querySelector('.work-name').value.trim(),
-        workUrl: item.querySelector('.work-url').value.trim(),
-        originalUrl: item.querySelector('.original-url').value.trim(),
+        type: getValue(item.querySelector('.work-type')),
+        name: getValue(item.querySelector('.work-name')),
+        id: getValue(item.querySelector('.work-id')),
+        urls: item.querySelector('.costume-field').offsetParent
+			? [...item.querySelectorAll('.costume-field :checked')].map(x => 'cw3/' + arts.Костюм.template.replace('$1', getValue(item.querySelector('.work-id'))).replace('$2', x.className.slice('costume_'.length)))
+			: [getValue(item.querySelector('.work-url'))],
+        originalUrl: getValue(item.querySelector('.original-url')),
       }));
 
-      return { id: idValue, works };
+      return { id, works };
     }
 
     function formatMultiple(strings) {
 	  return strings.length <= 1 ? strings[0] : strings.slice(0, -1).join(', ') + ' и ' + strings.at(-1);
 	}
 
+	function formatTable(list, cols) {
+	  const rows = Math.ceil(list.length / cols);
+	  cols = Math.ceil(list.length / rows);
+	  return '[table]' + list.map(x => '[td]' + x + '[/td]').reduce((acc, val, i) => (i <= cols * (rows - rows * cols + list.length) ? i % cols === 0 : (list.length - i) % (cols - 1) === 0) ? [...acc, [val]] : [...acc.slice(0, -1), [...acc.at(-1), val]], []).map(x => '[tr]' + x.join('') + '[/tr]').join('\n') + '[/table]';
+	}
+
     function refreshResult() {
 	  const data = getFormData();
 
-	  const workCounts = Object.fromEntries(Object.keys(arts).map(type => [type, data.works.filter(work => work.type === type && work.workUrl && work.originalUrl).length]));
+	  const workCounts = Object.fromEntries(allArts.map(type => [type, data.works.filter(work => work.type === type && (work.name || work.id) && work.urls.some(x => x) && (work.originalUrl || undesignify(type) === type)).length]));
 	  const stringWorkCounts = formatMultiple(Object.entries(workCounts).filter(x => x[1] !== 0).map(x => x[0] + ' x' + x[1])) || 'ничего';
 
 	  const works = [];
-	  for (const type in arts) {
+	  for (const type of allArts) {
 	    if (workCounts[type] === 0) continue;
+		const simpleType = undesignify(type);
 		const list = [];
 		for (const work of data.works) {
-		  if (work.type !== type || !work.workUrl || !work.originalUrl) continue;
-		  list.push(`[img]${work.workUrl}[/img]
-[url]cw3/${arts[type].template.replace('$1', arts[type][work.name])}[/url]
-[url]${work.workUrl}[/url]
-[url]${work.originalUrl}[/url]`);
+		  if (work.type !== type || (!work.name && !work.id) || !work.urls.some(x => x) || (!work.originalUrl && type !== simpleType)) continue;
+		  for (const url of work.urls) {
+		    list.push(`[img]${url}[/img]
+${url.startsWith('cw3') ? '' : `[url]cw3/${arts[simpleType].template.replace('$1', work.id || arts[simpleType][work.name])}[/url]\n`}[url]${url}[/url]${simpleType !== type ? `\n[url]${work.originalUrl}[/url]` : ''}`);
+		  }
 		}
-		works.push(`[b]${arts[type].plural}:[/b]\n\n[table][tr]${list.map(x => '[td]' + x + '[/td]').join('\n')}[/tr][/table]`);
+		works.push(`[b]${plural(type)}:[/b]\n\n${formatTable(list, arts[simpleType].columns)}`);
 	  }
 
       let idString = `[link${data.id}] (${data.id}) нарисовал в шайку Разбитого Корабля ${stringWorkCounts}. Прошу выдать баллы за работу:`;
@@ -510,7 +670,6 @@
     });
 
     addWorkRow();
-    reportIdInput.value = '1670521';
     refreshResult();
   </script>
 </body>

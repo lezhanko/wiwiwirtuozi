@@ -378,7 +378,7 @@
       <form id="reportForm" autocomplete="off" novalidate>
         <div class="form-grid">
           <div class="field half">
-            <label for="reportId">ID</label>
+            <label for="reportId">ID художника</label>
             <input id="reportId" name="reportId" type="text" input="numeric" />
           </div>
 
@@ -688,9 +688,9 @@ ${arts[simpleType].noOffsite ? '' : `[url]${siteURL}[/url]\n`}[url]${url}[/url]$
 
       let idString = `[link${data.id}] (${data.id}) нарисовал в шайку Разбитого Корабля ${workCounts}. Прошу выдать баллы за работу:`;
       reportIdInput.classList.remove('invalid');
-      if (!Number.isInteger(data.id) || data.id < 1 || data.id >= 1E7) {
+      if (!Number.isInteger(data.id)) {
         reportIdInput.classList.add('invalid');
-        idString = 'ID должен быть положительным числом до 7 цифр включительно.';
+        idString = 'ID должен быть числом.';
       }
 
       result.value = `${idString}\n\n[center]${works.join('\n\n')}[/center]`;

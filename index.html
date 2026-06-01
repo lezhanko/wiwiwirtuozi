@@ -485,6 +485,7 @@
 		  "Каюта морских волков": 104678,
 		  "Палубная рубка": 104680,
 		  "Душистая кладовая": 126789,
+		  "Пищащий уголок": 137129,
 		  "Большая каюта": 110431,
 		  "Дыра в корабле": 104669,
 		  "Песчаный овраг": 100751,
@@ -544,6 +545,7 @@
 	  "Каюта морских волков": "https://ibb.co/27Ns2wgH",
 	  "Палубная рубка": "https://ibb.co/Gf5mk989",
 	  "Душистая кладовая": "https://ibb.co/sJJwfYD1",
+	  "Пищащий уголок": 137129,
 	  "Большая каюта": "https://ibb.co/ZzRKT1BP",
 	  "Дыра в корабле": "https://ibb.co/XxbfhKvz",
 	  "Песчаный овраг": "https://ibb.co/81dZCjF",
@@ -585,6 +587,8 @@
 		  return 'Шапки';
 		case 'Иллюстрация':
 		  return 'Иллюстрации';
+		case 'Медаль':
+		  return 'Медали';
 	    default:
 		  return type.startsWith('Украшение') ? type.replace('Украшение', 'Украшения').slice(0, -1) + 'ов' : type + 'ы';
 	  }
@@ -604,7 +608,7 @@
 	  };
 
 	  const onChange = () => {
-	    workSelect.classList.toggle('hidden', typeSelect.value === 'Предмет');
+	    workSelect.classList.toggle('hidden', Boolean(arts[typeSelect.value]?.noOffsite));
 	    costumeSelect.classList.toggle('hidden', typeSelect.value !== 'Костюм');
 	    nameSelect.classList.toggle('hidden', typeSelect.value === undesignify(typeSelect.value));
         setOptions(nameSelect, Object.keys(arts[undesignify(typeSelect.value)]).filter(x => /\W/.test(x)), nameSelect.value);
@@ -682,7 +686,7 @@ ${arts[simpleType].noOffsite ? '' : `[url]${siteURL}[/url]\n`}[url]${url}[/url]$
 		if (list.length > 0) works.push(`[b]${plural(type)}:[/b]\n\n${formatTable(list, arts[simpleType].columns)}`);
 	  }
 
-	  const workCounts = formatMultiple(Object.entries(Object.groupBy(data.works.filter(work => (work.name || work.id) && (work.urls.some(x => x) || (arts[work.type].noOffsite && work.type !== 'Костюм')) && (work.originalUrl || undesignify(work.type) === work.type)), work => work.type === 'Костюм' ? `${work.type} на ${work.urls.length} стадии` : work.type)).filter(x => x[1].length > 0).map(x => x[0] + ' x' + x[1].length)) || 'ничего';
+	  const workCounts = formatMultiple(Object.entries(Object.groupBy(data.works.filter(work => (work.name || work.id) && (work.urls.some(x => x) || (arts[work.type]?.noOffsite && work.type !== 'Костюм')) && (work.originalUrl || undesignify(work.type) === work.type)), work => work.type === 'Костюм' ? `${work.type} на ${work.urls.length} стадии` : work.type)).filter(x => x[1].length > 0).map(x => x[0] + ' x' + x[1].length)) || 'ничего';
 
       let idString = `[link${data.id}] (${data.id}) нарисовал в шайку Разбитого Корабля ${workCounts}. Прошу выдать баллы за работу:`;
       reportIdInput.classList.remove('invalid');

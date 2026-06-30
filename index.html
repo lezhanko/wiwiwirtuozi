@@ -526,10 +526,35 @@
 	  'Шапка': {
 		  'template': 'blog$1',
 		  'columns': 1
+	  },
+	  'Действие': {
+		  'template': 'cw3/actions/$1.png',
+		  'columns': 4,
+		  'noOffsite': true
+	  },
+	  'Фон охоты': {
+		  'template': 'cw3/jagd_img/bg$1.png',
+		  'columns': 1,
+		  'noOffsite': true
+	  },
+	  'Препятствие охоты': {
+		  'template': 'cw3/jagd_img/branch$1.png',
+		  'columns': 3,
+		  'noOffsite': true
+	  },
+	  'Ускоритель охоты': {
+		  'template': 'cw3/jagd_img/grass$1.png',
+		  'columns': 3,
+		  'noOffsite': true
+	  },
+	  'След охоты': {
+		  'template': 'cw3/jagd_img/step$1.png',
+		  'columns': 1,
+		  'noOffsite': true
 	  }
 	};
 
-	const allArts = ['Медаль', 'Предмет', 'Костюм', 'Бот', 'Украшение бота', 'Шапка', 'Иллюстрация', 'Фон', 'Украшение фона'];
+	const allArts = ['Медаль', 'Предмет', 'Действие', 'Костюм', 'Бот', 'Украшение бота', 'Шапка', 'Иллюстрация', 'Фон', 'Украшение фона', 'Препятствие охоты', 'Ускоритель охоты', 'След охоты', 'Фон охоты'];
 
 	const originals = {
 	  "Трюм": "https://ibb.co/wN0fhwVr",
@@ -582,16 +607,12 @@
 	}
 
 	function plural(type) {
-	  switch (type) {
-	    case 'Шапка':
-		  return 'Шапки';
-		case 'Иллюстрация':
-		  return 'Иллюстрации';
-		case 'Медаль':
-		  return 'Медали';
-	    default:
-		  return type.startsWith('Украшение') ? type.replace('Украшение', 'Украшения').slice(0, -1) + 'ов' : type + 'ы';
-	  }
+	  if (type.startsWith('Украшение')) return type.replace('Украшение', 'Украшения').slice(0, -1) + 'ов';
+	  if (type.endsWith('охоты')) return plural(type.slice(0, -' охоты'.length)) + ' охоты';
+	  if (type.endsWith('ь') || type.endsWith('ия')) return type.slice(0, -1) + 'и';
+	  if (type.endsWith('ие')) return type.slice(0, -1) + 'я';
+	  if (type == 'Шапка') return 'Шапки';
+	  return type + 'ы';
 	}
 
     function addWorkRow() {
@@ -675,7 +696,7 @@
 		const simpleType = undesignify(type);
 		const list = [];
 		for (const work of data.works) {
-		  if (work.type !== type || (!work.name && !work.id) || (!work.urls.some(x => x) && simpleType !== 'Предмет') || (!work.originalUrl && type !== simpleType)) continue;
+		  if (work.type !== type || (!work.name && !work.id) || (!work.urls.some(x => x) && !arts[simpleType].noOffsite) || (!work.originalUrl && type !== simpleType)) continue;
 		  const siteURL = arts[simpleType].template.replace('$1', arts[simpleType][work.name] || work.id);
 		  if (!work.urls.some(x => x)) work.urls = [siteURL];
 		  list.push(work.urls.map(url => 
